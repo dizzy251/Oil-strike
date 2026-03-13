@@ -925,12 +925,12 @@ export default function OilSkyPrototype() {
     window.addEventListener("keyup", onKeyUp);
 
     return () => {
-      game.running = false;
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, [dpr, palette]);
+  game.running = false;
+  window.removeEventListener("resize", resize);
+  window.removeEventListener("keydown", onKeyDown);
+  window.removeEventListener("keyup", onKeyUp);
+};
+}, [dpr, palette, isMobileLandscape]);
 
   useEffect(() => {
     if (status === "gameover") {
