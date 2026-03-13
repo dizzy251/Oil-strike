@@ -114,6 +114,7 @@ export default function OilSkyPrototype() {
     const game = {
       width: 0,
       height: 0,
+      viewScale: 1,
       lastTs: 0,
       running: true,
       input: false,
@@ -144,17 +145,24 @@ export default function OilSkyPrototype() {
       return Math.max(min, Math.min(max, v));
     }
 
-    function resize() {
-      const rect = wrap.getBoundingClientRect();
-      game.width = Math.max(360, rect.width);
-      game.height = Math.max(640, rect.height);
-      canvas.width = Math.floor(game.width * dpr);
-      canvas.height = Math.floor(game.height * dpr);
-      canvas.style.width = `${game.width}px`;
-      canvas.style.height = `${game.height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!game.player) resetGame(false);
-    }
+   function resize() {
+  const rect = wrap.getBoundingClientRect();
+
+  const landscapeZoom = isMobileLandscape ? 0.72 : 1;
+  game.viewScale = landscapeZoom;
+
+  game.width = Math.max(360, rect.width / game.viewScale);
+  game.height = Math.max(isMobileLandscape ? 540 : 640, rect.height / game.viewScale);
+
+  canvas.width = Math.floor(rect.width * dpr);
+  canvas.height = Math.floor(rect.height * dpr);
+  canvas.style.width = `${rect.width}px`;
+  canvas.style.height = `${rect.height}px`;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  if (!game.player) resetGame(false);
+}
 
     function resetGame(startPlaying = true) {
       game.spawnTimer = 0;
@@ -869,25 +877,32 @@ export default function OilSkyPrototype() {
     }
 
     function render() {
-      const shakeX = (Math.random() - 0.5) * game.shake;
-      const shakeY = (Math.random() - 0.5) * game.shake;
-      ctx.save();
-      ctx.clearRect(0, 0, game.width, game.height);
-      ctx.translate(shakeX, shakeY);
-      drawBackground(ctx);
-      for (const rig of game.rigs) drawRig(ctx, rig);
-      for (const barrel of game.barrels) drawBarrel(ctx, barrel);
-      for (const missile of game.missiles) drawMissile(ctx, missile);
-      for (const bullet of game.bullets) drawBullet(ctx, bullet);
-      drawPlayer(ctx);
-      drawParticles(ctx);
-      drawHUD(ctx);
-      if (game.flash > 0.01) {
-        ctx.fillStyle = `rgba(255,255,255,${game.flash})`;
-        ctx.fillRect(0, 0, game.width, game.height);
-      }
-      ctx.restore();
-    }
+  const shakeX = (Math.random() - 0.5) * game.shake;
+  const shakeY = (Math.random() - 0.5) * game.shake;
+
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+  ctx.scale(game.viewScale, game.viewScale);
+  ctx.translate(shakeX, shakeY);
+
+  drawBackground(ctx);
+  for (const rig of game.rigs) drawRig(ctx, rig);
+  for (const barrel of game.barrels) drawBarrel(ctx, barrel);
+  for (const missile of game.missiles) drawMissile(ctx, missile);
+  for (const bullet of game.bullets) drawBullet(ctx, bullet);
+  drawPlayer(ctx);
+  drawParticles(ctx);
+  drawHUD(ctx);
+
+  if (game.flash > 0.01) {
+    ctx.fillStyle = `rgba(255,255,255,${game.flash})`;
+    ctx.fillRect(0, 0, game.width, game.height);
+  }
+
+  ctx.restore();
+}
 
     function loop(ts) {
       if (!game.running) return;
