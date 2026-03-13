@@ -26,10 +26,10 @@ export default function OilSkyPrototype() {
   const [isTouching, setIsTouching] = useState(false);
   const [isMobileLandscape, setIsMobileLandscape] = useState(false);
   const [viewportSize, setViewportSize] = useState({
-  width: typeof window !== "undefined" ? window.innerWidth : 1280,
-  height: typeof window !== "undefined" ? window.innerHeight : 720,
-});
-const [layoutVersion, setLayoutVersion] = useState(0);
+    width: typeof window !== "undefined" ? window.innerWidth : 1280,
+    height: typeof window !== "undefined" ? window.innerHeight : 720,
+  });
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
   const statusRef = useRef("menu");
   const isTouchingRef = useRef(false);
@@ -95,54 +95,55 @@ const [layoutVersion, setLayoutVersion] = useState(0);
   useEffect(() => {
     difficultyRef.current = difficulty;
   }, [difficulty]);
+
   useEffect(() => {
-  let frame = 0;
-  let timeoutId = 0;
+    let frame = 0;
+    let timeoutId = 0;
 
-  function updateViewport() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const mobile = width <= 1024;
-    const landscape = width > height;
+    function updateViewport() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const mobile = width <= 1024;
+      const landscape = width > height;
 
-    setViewportSize({ width, height });
-    setIsMobileLandscape(mobile && landscape);
-    setLayoutVersion((v) => v + 1);
-  }
+      setViewportSize({ width, height });
+      setIsMobileLandscape(mobile && landscape);
+      setLayoutVersion((v) => v + 1);
+    }
 
-  function handleViewportChange() {
-    cancelAnimationFrame(frame);
-    clearTimeout(timeoutId);
+    function handleViewportChange() {
+      cancelAnimationFrame(frame);
+      clearTimeout(timeoutId);
 
-    frame = requestAnimationFrame(() => {
-      updateViewport();
-
-      timeoutId = window.setTimeout(() => {
+      frame = requestAnimationFrame(() => {
         updateViewport();
-      }, 250);
-    });
-  }
 
-  updateViewport();
+        timeoutId = window.setTimeout(() => {
+          updateViewport();
+        }, 250);
+      });
+    }
 
-  window.addEventListener("resize", handleViewportChange);
-  window.addEventListener("orientationchange", handleViewportChange);
+    updateViewport();
 
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", handleViewportChange);
-  }
-
-  return () => {
-    cancelAnimationFrame(frame);
-    clearTimeout(timeoutId);
-    window.removeEventListener("resize", handleViewportChange);
-    window.removeEventListener("orientationchange", handleViewportChange);
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("orientationchange", handleViewportChange);
 
     if (window.visualViewport) {
-      window.visualViewport.removeEventListener("resize", handleViewportChange);
+      window.visualViewport.addEventListener("resize", handleViewportChange);
     }
-  };
-}, []);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("orientationchange", handleViewportChange);
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleViewportChange);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -183,77 +184,6 @@ const [layoutVersion, setLayoutVersion] = useState(0);
     function clamp(v, min, max) {
       return Math.max(min, Math.min(max, v));
     }
-function resize() {
-  const rect = wrap.getBoundingClientRect();
-
-  const landscapeZoom = isMobileLandscape ? 0.58 : 1;
-  game.viewScale = landscapeZoom;
-
-  game.width = Math.max(360, rect.width / game.viewScale);
-  game.height = Math.max(isMobileLandscape ? 500 : 640, rect.height / game.viewScale);
-
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
-  canvas.style.width = `${rect.width}px`;
-  canvas.style.height = `${rect.height}px`;
-
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  resetGame(false);
-}
-
-  const scaleX = game.width / oldWidth;
-  const scaleY = game.height / oldHeight;
-
-  if (game.player) {
-    game.player.x *= scaleX;
-    game.player.y *= scaleY;
-    game.player.y = clamp(game.player.y, 54, game.height - 120);
-  }
-
-  game.rigs = game.rigs.map((rig) => ({
-    ...rig,
-    x: rig.x * scaleX,
-    y: rig.y * scaleY,
-    w: rig.w * scaleX,
-    h: rig.h * scaleY,
-  }));
-
-  game.missiles = game.missiles.map((missile) => ({
-    ...missile,
-    x: missile.x * scaleX,
-    y: missile.y * scaleY,
-    r: missile.r * Math.min(scaleX, scaleY),
-  }));
-
-  game.bullets = game.bullets.map((bullet) => ({
-    ...bullet,
-    x: bullet.x * scaleX,
-    y: bullet.y * scaleY,
-    r: bullet.r * Math.min(scaleX, scaleY),
-    trail: bullet.trail * scaleX,
-  }));
-
-  game.barrels = game.barrels.map((barrel) => ({
-    ...barrel,
-    x: barrel.x * scaleX,
-    y: barrel.y * scaleY,
-    r: barrel.r * Math.min(scaleX, scaleY),
-  }));
-
-  game.particles = game.particles.map((part) => ({
-    ...part,
-    x: part.x * scaleX,
-    y: part.y * scaleY,
-    size: part.size * Math.min(scaleX, scaleY),
-  }));
-
-  game.stars = game.stars.map((star) => ({
-    ...star,
-    x: star.x * scaleX,
-    y: star.y * scaleY,
-  }));
-}
 
     function resetGame(startPlaying = true) {
       game.spawnTimer = 0;
@@ -296,6 +226,25 @@ function resize() {
       setDistance(0);
       setDifficulty(1);
       setStatus(startPlaying ? "playing" : "menu");
+    }
+
+    function resize() {
+      const rect = wrap.getBoundingClientRect();
+
+      const landscapeZoom = isMobileLandscape ? 0.58 : 1;
+      game.viewScale = landscapeZoom;
+
+      game.width = Math.max(360, rect.width / game.viewScale);
+      game.height = Math.max(isMobileLandscape ? 500 : 640, rect.height / game.viewScale);
+
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      resetGame(false);
     }
 
     function emitExplosion(x, y, intensity = 1) {
@@ -912,128 +861,129 @@ function resize() {
       ctx2.closePath();
     }
 
-   function drawHUD(ctx2) {
-  const compact = isMobileLandscape;
-  const boxW = compact ? 92 : 128;
-  const boxH = compact ? 42 : 62;
-  const x1 = compact ? 12 : 18;
-  const x2 = compact ? x1 + boxW + 8 : x1 + boxW + 12;
-  const y = compact ? 10 : 18;
+    function drawHUD(ctx2) {
+      const compact = isMobileLandscape;
+      const boxW = compact ? 92 : 128;
+      const boxH = compact ? 42 : 62;
+      const x1 = compact ? 12 : 18;
+      const x2 = compact ? x1 + boxW + 8 : x1 + boxW + 12;
+      const y = compact ? 10 : 18;
 
-  function panel(x, title, value, accent) {
-    ctx2.fillStyle = "rgba(6,12,20,0.45)";
-    roundRect(ctx2, x, y, boxW, boxH, compact ? 14 : 18);
-    ctx2.fill();
+      function panel(x, title, value, accent) {
+        ctx2.fillStyle = "rgba(6,12,20,0.45)";
+        roundRect(ctx2, x, y, boxW, boxH, compact ? 14 : 18);
+        ctx2.fill();
 
-    ctx2.fillStyle = accent;
-    ctx2.fillRect(x + (compact ? 8 : 14), y + (compact ? 8 : 14), compact ? 3 : 4, boxH - (compact ? 16 : 28));
+        ctx2.fillStyle = accent;
+        ctx2.fillRect(x + (compact ? 8 : 14), y + (compact ? 8 : 14), compact ? 3 : 4, boxH - (compact ? 16 : 28));
 
-    ctx2.fillStyle = "rgba(255,255,255,0.75)";
-    ctx2.font = compact ? "10px Inter, system-ui, sans-serif" : "12px Inter, system-ui, sans-serif";
-    ctx2.fillText(title, x + (compact ? 18 : 28), y + (compact ? 15 : 23));
+        ctx2.fillStyle = "rgba(255,255,255,0.75)";
+        ctx2.font = compact ? "10px Inter, system-ui, sans-serif" : "12px Inter, system-ui, sans-serif";
+        ctx2.fillText(title, x + (compact ? 18 : 28), y + (compact ? 15 : 23));
 
-    ctx2.fillStyle = palette.white;
-    ctx2.font = compact ? "700 16px Inter, system-ui, sans-serif" : "700 24px Inter, system-ui, sans-serif";
-    ctx2.fillText(String(value), x + (compact ? 18 : 28), y + (compact ? 33 : 48));
-  }
+        ctx2.fillStyle = palette.white;
+        ctx2.font = compact ? "700 16px Inter, system-ui, sans-serif" : "700 24px Inter, system-ui, sans-serif";
+        ctx2.fillText(String(value), x + (compact ? 18 : 28), y + (compact ? 33 : 48));
+      }
 
-  panel(x1, "SCORE", scoreRef.current, palette.gold);
-  panel(x2, "OIL", oilRef.current, palette.teal);
+      panel(x1, "SCORE", scoreRef.current, palette.gold);
+      panel(x2, "OIL", oilRef.current, palette.teal);
 
-  if (compact) {
-    const row2Y = y + boxH + 8;
+      if (compact) {
+        const row2Y = y + boxH + 8;
 
-    ctx2.fillStyle = "rgba(6,12,20,0.45)";
-    roundRect(ctx2, x1, row2Y, boxW, boxH, 14);
-    ctx2.fill();
-    ctx2.fillStyle = "rgba(255,255,255,0.75)";
-    ctx2.font = "10px Inter, system-ui, sans-serif";
-    ctx2.fillText("CASH", x1 + 18, row2Y + 15);
-    ctx2.fillStyle = palette.gold;
-    ctx2.font = "700 16px Inter, system-ui, sans-serif";
-    ctx2.fillText(`$${cashRef.current}`, x1 + 18, row2Y + 33);
+        ctx2.fillStyle = "rgba(6,12,20,0.45)";
+        roundRect(ctx2, x1, row2Y, boxW, boxH, 14);
+        ctx2.fill();
+        ctx2.fillStyle = "rgba(255,255,255,0.75)";
+        ctx2.font = "10px Inter, system-ui, sans-serif";
+        ctx2.fillText("CASH", x1 + 18, row2Y + 15);
+        ctx2.fillStyle = palette.gold;
+        ctx2.font = "700 16px Inter, system-ui, sans-serif";
+        ctx2.fillText(`$${cashRef.current}`, x1 + 18, row2Y + 33);
 
-    ctx2.fillStyle = "rgba(6,12,20,0.45)";
-    roundRect(ctx2, x2, row2Y, boxW, boxH, 14);
-    ctx2.fill();
-    ctx2.fillStyle = "rgba(255,255,255,0.75)";
-    ctx2.font = "10px Inter, system-ui, sans-serif";
-    ctx2.fillText("HITS", x2 + 18, row2Y + 15);
-    ctx2.fillStyle = palette.teal;
-    ctx2.font = "700 16px Inter, system-ui, sans-serif";
-    ctx2.fillText(String(shotsHitRef.current), x2 + 18, row2Y + 33);
+        ctx2.fillStyle = "rgba(6,12,20,0.45)";
+        roundRect(ctx2, x2, row2Y, boxW, boxH, 14);
+        ctx2.fill();
+        ctx2.fillStyle = "rgba(255,255,255,0.75)";
+        ctx2.font = "10px Inter, system-ui, sans-serif";
+        ctx2.fillText("HITS", x2 + 18, row2Y + 15);
+        ctx2.fillStyle = palette.teal;
+        ctx2.font = "700 16px Inter, system-ui, sans-serif";
+        ctx2.fillText(String(shotsHitRef.current), x2 + 18, row2Y + 33);
 
-    const dangerW = 118;
-    ctx2.fillStyle = "rgba(6,12,20,0.45)";
-    roundRect(ctx2, game.width - dangerW - 12, y, dangerW, boxH, 14);
-    ctx2.fill();
-    ctx2.fillStyle = "rgba(255,255,255,0.75)";
-    ctx2.font = "10px Inter, system-ui, sans-serif";
-    ctx2.fillText("DANGER", game.width - dangerW, y + 15);
-    ctx2.fillStyle = palette.red;
-    ctx2.font = "700 16px Inter, system-ui, sans-serif";
-    ctx2.fillText(String(difficultyRef.current), game.width - dangerW, y + 33);
+        const dangerW = 118;
+        ctx2.fillStyle = "rgba(6,12,20,0.45)";
+        roundRect(ctx2, game.width - dangerW - 12, y, dangerW, boxH, 14);
+        ctx2.fill();
+        ctx2.fillStyle = "rgba(255,255,255,0.75)";
+        ctx2.font = "10px Inter, system-ui, sans-serif";
+        ctx2.fillText("DANGER", game.width - dangerW, y + 15);
+        ctx2.fillStyle = palette.red;
+        ctx2.font = "700 16px Inter, system-ui, sans-serif";
+        ctx2.fillText(String(difficultyRef.current), game.width - dangerW, y + 33);
 
-    return;
-  }
+        return;
+      }
 
-  ctx2.fillStyle = "rgba(6,12,20,0.52)";
-  roundRect(ctx2, 18, 92, 128, 52, 18);
-  ctx2.fill();
-  ctx2.fillStyle = "rgba(255,255,255,0.7)";
-  ctx2.font = "12px Inter, system-ui, sans-serif";
-  ctx2.fillText("CASH", 46, 114);
-  ctx2.fillStyle = palette.gold;
-  ctx2.font = "700 22px Inter, system-ui, sans-serif";
-  ctx2.fillText(`$${cashRef.current}`, 46, 132);
+      ctx2.fillStyle = "rgba(6,12,20,0.52)";
+      roundRect(ctx2, 18, 92, 128, 52, 18);
+      ctx2.fill();
+      ctx2.fillStyle = "rgba(255,255,255,0.7)";
+      ctx2.font = "12px Inter, system-ui, sans-serif";
+      ctx2.fillText("CASH", 46, 114);
+      ctx2.fillStyle = palette.gold;
+      ctx2.font = "700 22px Inter, system-ui, sans-serif";
+      ctx2.fillText(`$${cashRef.current}`, 46, 132);
 
-  ctx2.fillStyle = "rgba(6,12,20,0.52)";
-  roundRect(ctx2, 158, 92, 128, 52, 18);
-  ctx2.fill();
-  ctx2.fillStyle = "rgba(255,255,255,0.7)";
-  ctx2.font = "12px Inter, system-ui, sans-serif";
-  ctx2.fillText("HITS", 186, 114);
-  ctx2.fillStyle = palette.teal;
-  ctx2.font = "700 22px Inter, system-ui, sans-serif";
-  ctx2.fillText(String(shotsHitRef.current), 186, 132);
+      ctx2.fillStyle = "rgba(6,12,20,0.52)";
+      roundRect(ctx2, 158, 92, 128, 52, 18);
+      ctx2.fill();
+      ctx2.fillStyle = "rgba(255,255,255,0.7)";
+      ctx2.font = "12px Inter, system-ui, sans-serif";
+      ctx2.fillText("HITS", 186, 114);
+      ctx2.fillStyle = palette.teal;
+      ctx2.font = "700 22px Inter, system-ui, sans-serif";
+      ctx2.fillText(String(shotsHitRef.current), 186, 132);
 
-  ctx2.fillStyle = "rgba(6,12,20,0.52)";
-  roundRect(ctx2, game.width - 176, 18, 158, 62, 18);
-  ctx2.fill();
-  ctx2.fillStyle = "rgba(255,255,255,0.7)";
-  ctx2.font = "12px Inter, system-ui, sans-serif";
-  ctx2.fillText("DANGER LEVEL", game.width - 158, 41);
-  ctx2.fillStyle = palette.red;
-  ctx2.font = "700 22px Inter, system-ui, sans-serif";
-  ctx2.fillText(String(difficultyRef.current), game.width - 158, 66);
-}
+      ctx2.fillStyle = "rgba(6,12,20,0.52)";
+      roundRect(ctx2, game.width - 176, 18, 158, 62, 18);
+      ctx2.fill();
+      ctx2.fillStyle = "rgba(255,255,255,0.7)";
+      ctx2.font = "12px Inter, system-ui, sans-serif";
+      ctx2.fillText("DANGER LEVEL", game.width - 158, 41);
+      ctx2.fillStyle = palette.red;
+      ctx2.font = "700 22px Inter, system-ui, sans-serif";
+      ctx2.fillText(String(difficultyRef.current), game.width - 158, 66);
+    }
+
     function render() {
-  const shakeX = (Math.random() - 0.5) * game.shake;
-  const shakeY = (Math.random() - 0.5) * game.shake;
+      const shakeX = (Math.random() - 0.5) * game.shake;
+      const shakeY = (Math.random() - 0.5) * game.shake;
 
-  ctx.save();
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+      ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
-  ctx.scale(game.viewScale, game.viewScale);
-  ctx.translate(shakeX, shakeY);
+      ctx.scale(game.viewScale, game.viewScale);
+      ctx.translate(shakeX, shakeY);
 
-  drawBackground(ctx);
-  for (const rig of game.rigs) drawRig(ctx, rig);
-  for (const barrel of game.barrels) drawBarrel(ctx, barrel);
-  for (const missile of game.missiles) drawMissile(ctx, missile);
-  for (const bullet of game.bullets) drawBullet(ctx, bullet);
-  drawPlayer(ctx);
-  drawParticles(ctx);
-  drawHUD(ctx);
+      drawBackground(ctx);
+      for (const rig of game.rigs) drawRig(ctx, rig);
+      for (const barrel of game.barrels) drawBarrel(ctx, barrel);
+      for (const missile of game.missiles) drawMissile(ctx, missile);
+      for (const bullet of game.bullets) drawBullet(ctx, bullet);
+      drawPlayer(ctx);
+      drawParticles(ctx);
+      drawHUD(ctx);
 
-  if (game.flash > 0.01) {
-    ctx.fillStyle = `rgba(255,255,255,${game.flash})`;
-    ctx.fillRect(0, 0, game.width, game.height);
-  }
+      if (game.flash > 0.01) {
+        ctx.fillStyle = `rgba(255,255,255,${game.flash})`;
+        ctx.fillRect(0, 0, game.width, game.height);
+      }
 
-  ctx.restore();
-}
+      ctx.restore();
+    }
 
     function loop(ts) {
       if (!game.running) return;
@@ -1071,12 +1021,12 @@ function resize() {
     window.addEventListener("keyup", onKeyUp);
 
     return () => {
-  game.running = false;
-  window.removeEventListener("resize", resize);
-  window.removeEventListener("keydown", onKeyDown);
-  window.removeEventListener("keyup", onKeyUp);
-};
-}, [dpr, palette, isMobileLandscape]);
+      game.running = false;
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [dpr, palette, isMobileLandscape, layoutVersion, viewportSize.width, viewportSize.height]);
 
   useEffect(() => {
     if (status === "gameover") {
@@ -1126,211 +1076,206 @@ function resize() {
   const restart = () => startRun();
 
   return (
-  <div className="min-h-[100dvh] bg-slate-950 text-slate-50">
-    <div
-  key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
-  ref={wrapRef}
-  className="relative w-full touch-none bg-slate-950"
-  style={{ width: viewportSize.width, height: viewportSize.height }}
-          <Card className="relative h-full w-full overflow-hidden bg-slate-950">
-            <CardContent className="h-full p-0">
-              <div
-  key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
-  ref={wrapRef}
-  className="relative w-full touch-none bg-slate-950"
-  style={{ width: viewportSize.width, height: viewportSize.height }}
-                onMouseDown={(e) => {
-                  const rect = wrapRef.current?.getBoundingClientRect();
-                  const x = rect ? e.clientX - rect.left : 0;
-                  if (rect && x > rect.width * 0.58) {
-                    const game = gameRef.current;
-                    if (game?.player && statusRef.current === "playing") {
-                      game.tryShoot?.();
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-50">
+      {isMobileLandscape ? (
+        <div
+          className="fixed inset-0 overflow-hidden bg-slate-950"
+          style={{ width: viewportSize.width, height: viewportSize.height }}
+        >
+          <div className="h-full w-full">
+            <Card className="relative h-full w-full overflow-hidden bg-slate-950">
+              <CardContent className="h-full p-0">
+                <div
+                  key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
+                  ref={wrapRef}
+                  className="relative w-full touch-none bg-slate-950"
+                  style={{ width: viewportSize.width, height: viewportSize.height }}
+                  onMouseDown={(e) => {
+                    const rect = wrapRef.current?.getBoundingClientRect();
+                    const x = rect ? e.clientX - rect.left : 0;
+                    if (rect && x > rect.width * 0.58) {
+                      const game = gameRef.current;
+                      if (game?.player && statusRef.current === "playing") {
+                        game.tryShoot?.();
+                      }
+                    } else {
+                      setIsTouching(true);
                     }
-                  } else {
-                    setIsTouching(true);
-                  }
-                }}
-                onMouseUp={() => setIsTouching(false)}
-                onMouseLeave={() => setIsTouching(false)}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  const rect = wrapRef.current?.getBoundingClientRect();
-                  const touch = e.touches?.[0];
-                  const x = rect && touch ? touch.clientX - rect.left : 0;
-                  if (rect && x > rect.width * 0.58) {
-                    const game = gameRef.current;
-                    if (game?.player && statusRef.current === "playing") {
-                      game.tryShoot?.();
+                  }}
+                  onMouseUp={() => setIsTouching(false)}
+                  onMouseLeave={() => setIsTouching(false)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    const rect = wrapRef.current?.getBoundingClientRect();
+                    const touch = e.touches?.[0];
+                    const x = rect && touch ? touch.clientX - rect.left : 0;
+                    if (rect && x > rect.width * 0.58) {
+                      const game = gameRef.current;
+                      if (game?.player && statusRef.current === "playing") {
+                        game.tryShoot?.();
+                      }
+                    } else {
+                      setIsTouching(true);
                     }
-                  } else {
-                    setIsTouching(true);
-                  }
-                }}
-                onTouchEnd={() => setIsTouching(false)}
-              >
-                <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+                  }}
+                  onTouchEnd={() => setIsTouching(false)}
+                >
+                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-                {status === "menu" && (
-                  <Overlay
-                    title="Oil Strike"
-                    subtitle="Tippe Start."
-                    buttonLabel="Start"
-                    onClick={startRun}
-                  />
-                )}
-                {status === "paused" && (
-                  <Overlay
-                    title="Pausiert"
-                    subtitle="Tippe auf Weiter."
-                    buttonLabel="Weiter"
-                    onClick={() => setStatus("playing")}
-                  />
-                )}
-                {status === "gameover" && (
-                  <Overlay
-                    title="Jet zerstört"
-                    subtitle={`Score ${score} • Best ${Math.max(best, score)} • Öl ${oil} • $${cash}`}
-                    buttonLabel="Nochmal"
-                    onClick={restart}
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    ) : (
-      <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-4 md:p-6 lg:grid lg:grid-cols-[360px_1fr]">
-        <div className="space-y-4">
-          <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/30 backdrop-blur">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <Badge className="mb-3 rounded-full bg-amber-500/15 px-3 py-1 text-amber-300">Prototype Build</Badge>
-                  <h1 className="text-3xl font-black tracking-tight">Oil Strike</h1>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    Eine stabile spielbare Testversion mit realistischerem Jet, sichtbarem Piloten, manueller Schusskontrolle und sauberer Vorschau.
-                  </p>
+                  {status === "menu" && (
+                    <Overlay title="Oil Strike" subtitle="Tippe Start." buttonLabel="Start" onClick={startRun} />
+                  )}
+                  {status === "paused" && (
+                    <Overlay title="Pausiert" subtitle="Tippe auf Weiter." buttonLabel="Weiter" onClick={() => setStatus("playing")} />
+                  )}
+                  {status === "gameover" && (
+                    <Overlay
+                      title="Jet zerstört"
+                      subtitle={`Score ${score} • Best ${Math.max(best, score)} • Öl ${oil} • $${cash}`}
+                      buttonLabel="Nochmal"
+                      onClick={restart}
+                    />
+                  )}
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-4 md:p-6 lg:grid lg:grid-cols-[360px_1fr]">
+          <div className="space-y-4">
+            <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/30 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <Badge className="mb-3 rounded-full bg-amber-500/15 px-3 py-1 text-amber-300">Prototype Build</Badge>
+                    <h1 className="text-3xl font-black tracking-tight">Oil Strike</h1>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                      Eine stabile spielbare Testversion mit realistischerem Jet, sichtbarem Piloten, manueller Schusskontrolle und sauberer Vorschau.
+                    </p>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <Stat icon={Trophy} label="Best" value={best} />
-                <Stat icon={Zap} label="Danger" value={difficulty} />
-                <Stat icon={Fuel} label="Oil" value={oil} />
-                <Stat icon={Coins} label="Cash" value={`$${cash}`} />
-                <Stat icon={Crosshair} label="Hits" value={shotsHit} />
-                <Stat icon={Smartphone} label="Mode" value="Touch" />
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Stat icon={Trophy} label="Best" value={best} />
+                  <Stat icon={Zap} label="Danger" value={difficulty} />
+                  <Stat icon={Fuel} label="Oil" value={oil} />
+                  <Stat icon={Coins} label="Cash" value={`$${cash}`} />
+                  <Stat icon={Crosshair} label="Hits" value={shotsHit} />
+                  <Stat icon={Smartphone} label="Mode" value="Touch" />
+                </div>
 
-              <div className="mt-5 flex flex-wrap gap-3">
-                {status !== "playing" ? (
-                  <Button onClick={startRun} className="rounded-2xl bg-amber-500 px-5 py-2 text-slate-950 hover:bg-amber-400">
-                    <span className="inline-flex items-center gap-2"><Play className="h-4 w-4" /> Start Testversion</span>
-                  </Button>
-                ) : (
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {status !== "playing" ? (
+                    <Button onClick={startRun} className="rounded-2xl bg-amber-500 px-5 py-2 text-slate-950 hover:bg-amber-400">
+                      <span className="inline-flex items-center gap-2">
+                        <Play className="h-4 w-4" /> Start Testversion
+                      </span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setStatus("paused")}
+                      className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-2 text-slate-100 hover:bg-slate-700"
+                    >
+                      Pause
+                    </Button>
+                  )}
                   <Button
-                    onClick={() => setStatus("paused")}
+                    onClick={restart}
                     className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-2 text-slate-100 hover:bg-slate-700"
                   >
-                    Pause
+                    <span className="inline-flex items-center gap-2">
+                      <RotateCcw className="h-4 w-4" /> Neustart
+                    </span>
                   </Button>
-                )}
-                <Button
-                  onClick={restart}
-                  className="rounded-2xl border border-slate-700 bg-slate-800 px-5 py-2 text-slate-100 hover:bg-slate-700"
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/20">
+              <CardContent className="p-6 text-sm leading-6 text-slate-300">
+                <h2 className="mb-3 text-lg font-bold text-slate-100">Controls</h2>
+                <p>Linke Seite halten = steigen</p>
+                <p>Rechte Seite tippen oder klicken = schießen</p>
+                <p>Schuss-Cooldown = 0.5 Sekunden</p>
+                <p>Space / Pfeil hoch = steigen</p>
+                <p>Enter = schießen</p>
+                <p>P = Pause</p>
+                <p>R = Neustart</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex min-h-[720px] items-stretch">
+            <Card className="relative w-full overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40">
+              <CardContent className="h-full p-0">
+                <div
+                  ref={wrapRef}
+                  className="relative h-[72vh] min-h-[720px] w-full touch-none bg-slate-950"
+                  onMouseDown={(e) => {
+                    const rect = wrapRef.current?.getBoundingClientRect();
+                    const x = rect ? e.clientX - rect.left : 0;
+                    if (rect && x > rect.width * 0.58) {
+                      const game = gameRef.current;
+                      if (game?.player && statusRef.current === "playing") {
+                        game.tryShoot?.();
+                      }
+                    } else {
+                      setIsTouching(true);
+                    }
+                  }}
+                  onMouseUp={() => setIsTouching(false)}
+                  onMouseLeave={() => setIsTouching(false)}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    const rect = wrapRef.current?.getBoundingClientRect();
+                    const touch = e.touches?.[0];
+                    const x = rect && touch ? touch.clientX - rect.left : 0;
+                    if (rect && x > rect.width * 0.58) {
+                      const game = gameRef.current;
+                      if (game?.player && statusRef.current === "playing") {
+                        game.tryShoot?.();
+                      }
+                    } else {
+                      setIsTouching(true);
+                    }
+                  }}
+                  onTouchEnd={() => setIsTouching(false)}
                 >
-                  <span className="inline-flex items-center gap-2"><RotateCcw className="h-4 w-4" /> Neustart</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-          <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/20">
-            <CardContent className="p-6 text-sm leading-6 text-slate-300">
-              <h2 className="mb-3 text-lg font-bold text-slate-100">Controls</h2>
-              <p>Linke Seite halten = steigen</p>
-              <p>Rechte Seite tippen oder klicken = schießen</p>
-              <p>Schuss-Cooldown = 0.5 Sekunden</p>
-              <p>Space / Pfeil hoch = steigen</p>
-              <p>Enter = schießen</p>
-              <p>P = Pause</p>
-              <p>R = Neustart</p>
-            </CardContent>
-          </Card>
+                  {status === "menu" && (
+                    <Overlay
+                      title="Oil Strike"
+                      subtitle="Links halten zum Fliegen, rechts tippen oder klicken zum Schießen. Cooldown: 0.5 Sekunden."
+                      buttonLabel="Run starten"
+                      onClick={startRun}
+                    />
+                  )}
+                  {status === "paused" && (
+                    <Overlay
+                      title="Pausiert"
+                      subtitle="Dein Run ist eingefroren. Weiter geht's mit einem Klick."
+                      buttonLabel="Weiter"
+                      onClick={() => setStatus("playing")}
+                    />
+                  )}
+                  {status === "gameover" && (
+                    <Overlay
+                      title="Jet zerstört"
+                      subtitle={`Score ${score} • Best ${Math.max(best, score)} • Öl ${oil} • $${cash}`}
+                      buttonLabel="Nochmal spielen"
+                      onClick={restart}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
-        <div className="flex min-h-[720px] items-stretch">
-          <Card className="relative w-full overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950 shadow-2xl shadow-black/40">
-            <CardContent className="h-full p-0">
-              <div
-                ref={wrapRef}
-                className="relative h-[72vh] min-h-[720px] w-full touch-none bg-slate-950"
-                onMouseDown={(e) => {
-                  const rect = wrapRef.current?.getBoundingClientRect();
-                  const x = rect ? e.clientX - rect.left : 0;
-                  if (rect && x > rect.width * 0.58) {
-                    const game = gameRef.current;
-                    if (game?.player && statusRef.current === "playing") {
-                      game.tryShoot?.();
-                    }
-                  } else {
-                    setIsTouching(true);
-                  }
-                }}
-                onMouseUp={() => setIsTouching(false)}
-                onMouseLeave={() => setIsTouching(false)}
-                onTouchStart={(e) => {
-                  e.preventDefault();
-                  const rect = wrapRef.current?.getBoundingClientRect();
-                  const touch = e.touches?.[0];
-                  const x = rect && touch ? touch.clientX - rect.left : 0;
-                  if (rect && x > rect.width * 0.58) {
-                    const game = gameRef.current;
-                    if (game?.player && statusRef.current === "playing") {
-                      game.tryShoot?.();
-                    }
-                  } else {
-                    setIsTouching(true);
-                  }
-                }}
-                onTouchEnd={() => setIsTouching(false)}
-              >
-                <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-
-                {status === "menu" && (
-                  <Overlay
-                    title="Oil Strike"
-                    subtitle="Links halten zum Fliegen, rechts tippen oder klicken zum Schießen. Cooldown: 0.5 Sekunden."
-                    buttonLabel="Run starten"
-                    onClick={startRun}
-                  />
-                )}
-                {status === "paused" && (
-                  <Overlay
-                    title="Pausiert"
-                    subtitle="Dein Run ist eingefroren. Weiter geht's mit einem Klick."
-                    buttonLabel="Weiter"
-                    onClick={() => setStatus("playing")}
-                  />
-                )}
-                {status === "gameover" && (
-                  <Overlay
-                    title="Jet zerstört"
-                    subtitle={`Score ${score} • Best ${Math.max(best, score)} • Öl ${oil} • $${cash}`}
-                    buttonLabel="Nochmal spielen"
-                    onClick={restart}
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 }
 
 function Stat({ icon: Icon, label, value }) {
