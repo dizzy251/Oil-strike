@@ -147,6 +147,10 @@ export default function OilSkyPrototype() {
 function resize() {
   const rect = wrap.getBoundingClientRect();
 
+  const oldWidth = game.width || Math.max(360, rect.width);
+  const oldHeight = game.height || Math.max(640, rect.height);
+  const hadPlayer = !!game.player;
+
   const landscapeZoom = isMobileLandscape ? 0.62 : 1;
   game.viewScale = landscapeZoom;
 
@@ -160,7 +164,62 @@ function resize() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  if (!game.player) resetGame(false);
+  if (!hadPlayer) {
+    resetGame(false);
+    return;
+  }
+
+  const scaleX = game.width / oldWidth;
+  const scaleY = game.height / oldHeight;
+
+  if (game.player) {
+    game.player.x *= scaleX;
+    game.player.y *= scaleY;
+    game.player.y = clamp(game.player.y, 54, game.height - 120);
+  }
+
+  game.rigs = game.rigs.map((rig) => ({
+    ...rig,
+    x: rig.x * scaleX,
+    y: rig.y * scaleY,
+    w: rig.w * scaleX,
+    h: rig.h * scaleY,
+  }));
+
+  game.missiles = game.missiles.map((missile) => ({
+    ...missile,
+    x: missile.x * scaleX,
+    y: missile.y * scaleY,
+    r: missile.r * Math.min(scaleX, scaleY),
+  }));
+
+  game.bullets = game.bullets.map((bullet) => ({
+    ...bullet,
+    x: bullet.x * scaleX,
+    y: bullet.y * scaleY,
+    r: bullet.r * Math.min(scaleX, scaleY),
+    trail: bullet.trail * scaleX,
+  }));
+
+  game.barrels = game.barrels.map((barrel) => ({
+    ...barrel,
+    x: barrel.x * scaleX,
+    y: barrel.y * scaleY,
+    r: barrel.r * Math.min(scaleX, scaleY),
+  }));
+
+  game.particles = game.particles.map((part) => ({
+    ...part,
+    x: part.x * scaleX,
+    y: part.y * scaleY,
+    size: part.size * Math.min(scaleX, scaleY),
+  }));
+
+  game.stars = game.stars.map((star) => ({
+    ...star,
+    x: star.x * scaleX,
+    y: star.y * scaleY,
+  }));
 }
 
     function resetGame(startPlaying = true) {
