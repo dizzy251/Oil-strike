@@ -25,6 +25,11 @@ export default function OilSkyPrototype() {
   const [difficulty, setDifficulty] = useState(1);
   const [isTouching, setIsTouching] = useState(false);
   const [isMobileLandscape, setIsMobileLandscape] = useState(false);
+  const [viewportSize, setViewportSize] = useState({
+  width: typeof window !== "undefined" ? window.innerWidth : 1280,
+  height: typeof window !== "undefined" ? window.innerHeight : 720,
+});
+const [layoutVersion, setLayoutVersion] = useState(0);
 
   const statusRef = useRef("menu");
   const isTouchingRef = useRef(false);
@@ -91,17 +96,51 @@ export default function OilSkyPrototype() {
     difficultyRef.current = difficulty;
   }, [difficulty]);
   useEffect(() => {
-  function checkLandscapeMode() {
-    const mobile = window.innerWidth <= 1024;
-    const landscape = window.innerWidth > window.innerHeight;
+  let frame = 0;
+  let timeoutId = 0;
+
+  function updateViewport() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const mobile = width <= 1024;
+    const landscape = width > height;
+
+    setViewportSize({ width, height });
     setIsMobileLandscape(mobile && landscape);
+    setLayoutVersion((v) => v + 1);
   }
 
-  checkLandscapeMode();
-  window.addEventListener("resize", checkLandscapeMode);
+  function handleViewportChange() {
+    cancelAnimationFrame(frame);
+    clearTimeout(timeoutId);
+
+    frame = requestAnimationFrame(() => {
+      updateViewport();
+
+      timeoutId = window.setTimeout(() => {
+        updateViewport();
+      }, 250);
+    });
+  }
+
+  updateViewport();
+
+  window.addEventListener("resize", handleViewportChange);
+  window.addEventListener("orientationchange", handleViewportChange);
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+  }
 
   return () => {
-    window.removeEventListener("resize", checkLandscapeMode);
+    cancelAnimationFrame(frame);
+    clearTimeout(timeoutId);
+    window.removeEventListener("resize", handleViewportChange);
+    window.removeEventListener("orientationchange", handleViewportChange);
+
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", handleViewportChange);
+    }
   };
 }, []);
 
@@ -147,11 +186,7 @@ export default function OilSkyPrototype() {
 function resize() {
   const rect = wrap.getBoundingClientRect();
 
-  const oldWidth = game.width || Math.max(360, rect.width);
-  const oldHeight = game.height || Math.max(640, rect.height);
-  const hadPlayer = !!game.player;
-
-  const landscapeZoom = isMobileLandscape ? 0.62 : 1;
+  const landscapeZoom = isMobileLandscape ? 0.58 : 1;
   game.viewScale = landscapeZoom;
 
   game.width = Math.max(360, rect.width / game.viewScale);
@@ -164,10 +199,8 @@ function resize() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  if (!hadPlayer) {
-    resetGame(false);
-    return;
-  }
+  resetGame(false);
+}
 
   const scaleX = game.width / oldWidth;
   const scaleY = game.height / oldHeight;
@@ -1094,14 +1127,18 @@ function resize() {
 
   return (
   <div className="min-h-[100dvh] bg-slate-950 text-slate-50">
-    {isMobileLandscape ? (
-      <div className="h-[100dvh] w-screen overflow-hidden bg-slate-950">
-        <div className="h-full w-full">
+    <div
+  key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
+  ref={wrapRef}
+  className="relative w-full touch-none bg-slate-950"
+  style={{ width: viewportSize.width, height: viewportSize.height }}
           <Card className="relative h-full w-full overflow-hidden bg-slate-950">
             <CardContent className="h-full p-0">
               <div
-                ref={wrapRef}
-                className="relative h-[100dvh] w-full touch-none bg-slate-950"
+  key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
+  ref={wrapRef}
+  className="relative w-full touch-none bg-slate-950"
+  style={{ width: viewportSize.width, height: viewportSize.height }}
                 onMouseDown={(e) => {
                   const rect = wrapRef.current?.getBoundingClientRect();
                   const x = rect ? e.clientX - rect.left : 0;
