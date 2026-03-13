@@ -144,15 +144,14 @@ export default function OilSkyPrototype() {
     function clamp(v, min, max) {
       return Math.max(min, Math.min(max, v));
     }
-
-   function resize() {
+function resize() {
   const rect = wrap.getBoundingClientRect();
 
-  const landscapeZoom = isMobileLandscape ? 0.72 : 1;
+  const landscapeZoom = isMobileLandscape ? 0.62 : 1;
   game.viewScale = landscapeZoom;
 
   game.width = Math.max(360, rect.width / game.viewScale);
-  game.height = Math.max(isMobileLandscape ? 540 : 640, rect.height / game.viewScale);
+  game.height = Math.max(isMobileLandscape ? 500 : 640, rect.height / game.viewScale);
 
   canvas.width = Math.floor(rect.width * dpr);
   canvas.height = Math.floor(rect.height * dpr);
@@ -821,61 +820,101 @@ export default function OilSkyPrototype() {
       ctx2.closePath();
     }
 
-    function drawHUD(ctx2) {
-      const boxW = 128;
-      const boxH = 62;
-      const x1 = 18;
-      const x2 = x1 + boxW + 12;
-      const y = 18;
+   function drawHUD(ctx2) {
+  const compact = isMobileLandscape;
+  const boxW = compact ? 92 : 128;
+  const boxH = compact ? 42 : 62;
+  const x1 = compact ? 12 : 18;
+  const x2 = compact ? x1 + boxW + 8 : x1 + boxW + 12;
+  const y = compact ? 10 : 18;
 
-      function panel(x, title, value, accent) {
-        ctx2.fillStyle = "rgba(6,12,20,0.52)";
-        roundRect(ctx2, x, y, boxW, boxH, 18);
-        ctx2.fill();
-        ctx2.fillStyle = accent;
-        ctx2.fillRect(x + 14, y + 14, 4, boxH - 28);
-        ctx2.fillStyle = "rgba(255,255,255,0.7)";
-        ctx2.font = "12px Inter, system-ui, sans-serif";
-        ctx2.fillText(title, x + 28, y + 23);
-        ctx2.fillStyle = palette.white;
-        ctx2.font = "700 24px Inter, system-ui, sans-serif";
-        ctx2.fillText(String(value), x + 28, y + 48);
-      }
+  function panel(x, title, value, accent) {
+    ctx2.fillStyle = "rgba(6,12,20,0.45)";
+    roundRect(ctx2, x, y, boxW, boxH, compact ? 14 : 18);
+    ctx2.fill();
 
-      panel(x1, "SCORE", scoreRef.current, palette.gold);
-      panel(x2, "OIL", oilRef.current, palette.teal);
+    ctx2.fillStyle = accent;
+    ctx2.fillRect(x + (compact ? 8 : 14), y + (compact ? 8 : 14), compact ? 3 : 4, boxH - (compact ? 16 : 28));
 
-      ctx2.fillStyle = "rgba(6,12,20,0.52)";
-      roundRect(ctx2, 18, 92, 128, 52, 18);
-      ctx2.fill();
-      ctx2.fillStyle = "rgba(255,255,255,0.7)";
-      ctx2.font = "12px Inter, system-ui, sans-serif";
-      ctx2.fillText("CASH", 46, 114);
-      ctx2.fillStyle = palette.gold;
-      ctx2.font = "700 22px Inter, system-ui, sans-serif";
-      ctx2.fillText(`$${cashRef.current}`, 46, 132);
+    ctx2.fillStyle = "rgba(255,255,255,0.75)";
+    ctx2.font = compact ? "10px Inter, system-ui, sans-serif" : "12px Inter, system-ui, sans-serif";
+    ctx2.fillText(title, x + (compact ? 18 : 28), y + (compact ? 15 : 23));
 
-      ctx2.fillStyle = "rgba(6,12,20,0.52)";
-      roundRect(ctx2, 158, 92, 128, 52, 18);
-      ctx2.fill();
-      ctx2.fillStyle = "rgba(255,255,255,0.7)";
-      ctx2.font = "12px Inter, system-ui, sans-serif";
-      ctx2.fillText("HITS", 186, 114);
-      ctx2.fillStyle = palette.teal;
-      ctx2.font = "700 22px Inter, system-ui, sans-serif";
-      ctx2.fillText(String(shotsHitRef.current), 186, 132);
+    ctx2.fillStyle = palette.white;
+    ctx2.font = compact ? "700 16px Inter, system-ui, sans-serif" : "700 24px Inter, system-ui, sans-serif";
+    ctx2.fillText(String(value), x + (compact ? 18 : 28), y + (compact ? 33 : 48));
+  }
 
-      ctx2.fillStyle = "rgba(6,12,20,0.52)";
-      roundRect(ctx2, game.width - 176, 18, 158, 62, 18);
-      ctx2.fill();
-      ctx2.fillStyle = "rgba(255,255,255,0.7)";
-      ctx2.font = "12px Inter, system-ui, sans-serif";
-      ctx2.fillText("DANGER LEVEL", game.width - 158, 41);
-      ctx2.fillStyle = palette.red;
-      ctx2.font = "700 22px Inter, system-ui, sans-serif";
-      ctx2.fillText(String(difficultyRef.current), game.width - 158, 66);
-    }
+  panel(x1, "SCORE", scoreRef.current, palette.gold);
+  panel(x2, "OIL", oilRef.current, palette.teal);
 
+  if (compact) {
+    const row2Y = y + boxH + 8;
+
+    ctx2.fillStyle = "rgba(6,12,20,0.45)";
+    roundRect(ctx2, x1, row2Y, boxW, boxH, 14);
+    ctx2.fill();
+    ctx2.fillStyle = "rgba(255,255,255,0.75)";
+    ctx2.font = "10px Inter, system-ui, sans-serif";
+    ctx2.fillText("CASH", x1 + 18, row2Y + 15);
+    ctx2.fillStyle = palette.gold;
+    ctx2.font = "700 16px Inter, system-ui, sans-serif";
+    ctx2.fillText(`$${cashRef.current}`, x1 + 18, row2Y + 33);
+
+    ctx2.fillStyle = "rgba(6,12,20,0.45)";
+    roundRect(ctx2, x2, row2Y, boxW, boxH, 14);
+    ctx2.fill();
+    ctx2.fillStyle = "rgba(255,255,255,0.75)";
+    ctx2.font = "10px Inter, system-ui, sans-serif";
+    ctx2.fillText("HITS", x2 + 18, row2Y + 15);
+    ctx2.fillStyle = palette.teal;
+    ctx2.font = "700 16px Inter, system-ui, sans-serif";
+    ctx2.fillText(String(shotsHitRef.current), x2 + 18, row2Y + 33);
+
+    const dangerW = 118;
+    ctx2.fillStyle = "rgba(6,12,20,0.45)";
+    roundRect(ctx2, game.width - dangerW - 12, y, dangerW, boxH, 14);
+    ctx2.fill();
+    ctx2.fillStyle = "rgba(255,255,255,0.75)";
+    ctx2.font = "10px Inter, system-ui, sans-serif";
+    ctx2.fillText("DANGER", game.width - dangerW, y + 15);
+    ctx2.fillStyle = palette.red;
+    ctx2.font = "700 16px Inter, system-ui, sans-serif";
+    ctx2.fillText(String(difficultyRef.current), game.width - dangerW, y + 33);
+
+    return;
+  }
+
+  ctx2.fillStyle = "rgba(6,12,20,0.52)";
+  roundRect(ctx2, 18, 92, 128, 52, 18);
+  ctx2.fill();
+  ctx2.fillStyle = "rgba(255,255,255,0.7)";
+  ctx2.font = "12px Inter, system-ui, sans-serif";
+  ctx2.fillText("CASH", 46, 114);
+  ctx2.fillStyle = palette.gold;
+  ctx2.font = "700 22px Inter, system-ui, sans-serif";
+  ctx2.fillText(`$${cashRef.current}`, 46, 132);
+
+  ctx2.fillStyle = "rgba(6,12,20,0.52)";
+  roundRect(ctx2, 158, 92, 128, 52, 18);
+  ctx2.fill();
+  ctx2.fillStyle = "rgba(255,255,255,0.7)";
+  ctx2.font = "12px Inter, system-ui, sans-serif";
+  ctx2.fillText("HITS", 186, 114);
+  ctx2.fillStyle = palette.teal;
+  ctx2.font = "700 22px Inter, system-ui, sans-serif";
+  ctx2.fillText(String(shotsHitRef.current), 186, 132);
+
+  ctx2.fillStyle = "rgba(6,12,20,0.52)";
+  roundRect(ctx2, game.width - 176, 18, 158, 62, 18);
+  ctx2.fill();
+  ctx2.fillStyle = "rgba(255,255,255,0.7)";
+  ctx2.font = "12px Inter, system-ui, sans-serif";
+  ctx2.fillText("DANGER LEVEL", game.width - 158, 41);
+  ctx2.fillStyle = palette.red;
+  ctx2.font = "700 22px Inter, system-ui, sans-serif";
+  ctx2.fillText(String(difficultyRef.current), game.width - 158, 66);
+}
     function render() {
   const shakeX = (Math.random() - 0.5) * game.shake;
   const shakeY = (Math.random() - 0.5) * game.shake;
