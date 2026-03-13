@@ -24,6 +24,7 @@ export default function OilSkyPrototype() {
   const [distance, setDistance] = useState(0);
   const [difficulty, setDifficulty] = useState(1);
   const [isTouching, setIsTouching] = useState(false);
+  const [isMobileLandscape, setIsMobileLandscape] = useState(false);
 
   const statusRef = useRef("menu");
   const isTouchingRef = useRef(false);
@@ -89,6 +90,20 @@ export default function OilSkyPrototype() {
   useEffect(() => {
     difficultyRef.current = difficulty;
   }, [difficulty]);
+  useEffect(() => {
+  function checkLandscapeMode() {
+    const mobile = window.innerWidth <= 1024;
+    const landscape = window.innerWidth > window.innerHeight;
+    setIsMobileLandscape(mobile && landscape);
+  }
+
+  checkLandscapeMode();
+  window.addEventListener("resize", checkLandscapeMode);
+
+  return () => {
+    window.removeEventListener("resize", checkLandscapeMode);
+  };
+}, []);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -965,7 +980,77 @@ export default function OilSkyPrototype() {
   const restart = () => startRun();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+  <div className="min-h-[100dvh] bg-slate-950 text-slate-50">
+    {isMobileLandscape ? (
+      <div className="h-[100dvh] w-screen overflow-hidden bg-slate-950">
+        <div className="h-full w-full">
+          <Card className="relative h-full w-full overflow-hidden bg-slate-950">
+            <CardContent className="h-full p-0">
+              <div
+                ref={wrapRef}
+                className="relative h-[100dvh] w-full touch-none bg-slate-950"
+                onMouseDown={(e) => {
+                  const rect = wrapRef.current?.getBoundingClientRect();
+                  const x = rect ? e.clientX - rect.left : 0;
+                  if (rect && x > rect.width * 0.58) {
+                    const game = gameRef.current;
+                    if (game?.player && statusRef.current === "playing") {
+                      game.tryShoot?.();
+                    }
+                  } else {
+                    setIsTouching(true);
+                  }
+                }}
+                onMouseUp={() => setIsTouching(false)}
+                onMouseLeave={() => setIsTouching(false)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  const rect = wrapRef.current?.getBoundingClientRect();
+                  const touch = e.touches?.[0];
+                  const x = rect && touch ? touch.clientX - rect.left : 0;
+                  if (rect && x > rect.width * 0.58) {
+                    const game = gameRef.current;
+                    if (game?.player && statusRef.current === "playing") {
+                      game.tryShoot?.();
+                    }
+                  } else {
+                    setIsTouching(true);
+                  }
+                }}
+                onTouchEnd={() => setIsTouching(false)}
+              >
+                <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
+                {status === "menu" && (
+                  <Overlay
+                    title="Oil Strike"
+                    subtitle="Tippe Start."
+                    buttonLabel="Start"
+                    onClick={startRun}
+                  />
+                )}
+                {status === "paused" && (
+                  <Overlay
+                    title="Pausiert"
+                    subtitle="Tippe auf Weiter."
+                    buttonLabel="Weiter"
+                    onClick={() => setStatus("playing")}
+                  />
+                )}
+                {status === "gameover" && (
+                  <Overlay
+                    title="Jet zerstört"
+                    subtitle={`Score ${score} • Best ${Math.max(best, score)} • Öl ${oil} • $${cash}`}
+                    buttonLabel="Nochmal"
+                    onClick={restart}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    ) : (
       <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-4 md:p-6 lg:grid lg:grid-cols-[360px_1fr]">
         <div className="space-y-4">
           <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/30 backdrop-blur">
@@ -1093,8 +1178,9 @@ export default function OilSkyPrototype() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 }
 
 function Stat({ icon: Icon, label, value }) {
@@ -1112,8 +1198,8 @@ function Stat({ icon: Icon, label, value }) {
 function Overlay({ title, subtitle, buttonLabel, onClick }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
-      <div className="mx-4 w-full max-w-md rounded-[28px] border border-white/10 bg-slate-950/75 p-8 text-center shadow-2xl shadow-black/40">
-        <h3 className="text-3xl font-black tracking-tight text-white">{title}</h3>
+      <div className="mx-4 w-full max-w-md rounded-[28px] border border-white/10 bg-slate-950/75 p-6 text-center shadow-2xl shadow-black/40 md:p-8">
+        <h3 className="text-2xl font-black tracking-tight text-white md:text-3xl">{title}</h3>
         <p className="mt-3 text-sm leading-6 text-slate-300">{subtitle}</p>
         <Button onClick={onClick} className="mt-6 rounded-2xl bg-amber-500 px-6 py-2 text-slate-950 hover:bg-amber-400">
           {buttonLabel}
