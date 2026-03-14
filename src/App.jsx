@@ -1163,7 +1163,7 @@ export default function OilSkyPrototype() {
   const restart = () => startRun();
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-slate-50">
+    <div className="min-h-[100dvh] select-none bg-slate-950 text-slate-50">
       {isMobileLandscape ? (
         <div
           className="fixed inset-0 overflow-hidden bg-slate-950"
@@ -1175,7 +1175,7 @@ export default function OilSkyPrototype() {
                 <div
                   key={`landscape-${layoutVersion}-${viewportSize.width}x${viewportSize.height}`}
                   ref={wrapRef}
-                  className="relative w-full touch-none bg-slate-950"
+                  className="relative w-full touch-none select-none bg-slate-950"
                   style={{ width: viewportSize.width, height: viewportSize.height }}
                   onMouseDown={handleMouseDown}
                   onMouseUp={handleMouseUp}
@@ -1185,7 +1185,7 @@ export default function OilSkyPrototype() {
                   onTouchEnd={handleTouchEnd}
                   onTouchCancel={handleTouchEnd}
                 >
-                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full select-none" draggable={false} />
 
                   {status === "menu" && (
                     <Overlay title="Oil Strike" subtitle="Tippe Start." buttonLabel="Start" onClick={startRun} />
@@ -1258,7 +1258,7 @@ export default function OilSkyPrototype() {
             </Card>
 
             <Card className="rounded-3xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/20">
-              <CardContent className="p-6 text-sm leading-6 text-slate-300">
+              <CardContent className="select-none p-6 text-sm leading-6 text-slate-300">
                 <h2 className="mb-3 text-lg font-bold text-slate-100">Controls</h2>
                 <p>Linke Seite halten = steigen</p>
                 <p>Rechte Seite tippen oder klicken = schießen</p>
@@ -1277,7 +1277,7 @@ export default function OilSkyPrototype() {
               <CardContent className="h-full p-0">
                 <div
                   ref={wrapRef}
-                  className="relative h-[72vh] min-h-[720px] w-full touch-none bg-slate-950"
+                 className="relative h-[72vh] min-h-[720px] w-full touch-none select-none bg-slate-950"
                   onMouseDown={handleMouseDown}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
@@ -1286,7 +1286,7 @@ export default function OilSkyPrototype() {
                   onTouchEnd={handleTouchEnd}
                   onTouchCancel={handleTouchEnd}
                 >
-                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+                  <canvas ref={canvasRef} className="absolute inset-0 h-full w-full select-none" draggable={false} />
 
                   {status === "menu" && (
                     <Overlay
