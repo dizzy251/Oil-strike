@@ -316,7 +316,7 @@ export default function OilSkyPrototype() {
     function resize() {
       const rect = wrap.getBoundingClientRect();
 
-      const landscapeZoom = isMobileLandscape ? 0.58 : 1;
+      const landscapeZoom = isMobileLandscape ? 0.85 : 1;
       game.viewScale = landscapeZoom;
 
       game.width = Math.max(360, rect.width / game.viewScale);
