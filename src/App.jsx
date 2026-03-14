@@ -39,6 +39,7 @@ export default function OilSkyPrototype() {
   const shotsHitRef = useRef(0);
   const distanceRef = useRef(0);
   const difficultyRef = useRef(1);
+  const flyTouchIdsRef = useRef(new Set());
 
   const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
 
@@ -95,6 +96,89 @@ export default function OilSkyPrototype() {
   useEffect(() => {
     difficultyRef.current = difficulty;
   }, [difficulty]);
+
+  const setTouchingNow = (value) => {
+    isTouchingRef.current = value;
+    setIsTouching(value);
+  };
+
+  const clearFlyTouches = () => {
+    flyTouchIdsRef.current.clear();
+    setTouchingNow(false);
+  };
+
+  const shootNow = () => {
+    const game = gameRef.current;
+    if (game?.player && statusRef.current === "playing") {
+      game.tryShoot?.();
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (statusRef.current !== "playing") return;
+
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = e.clientX - rect.left;
+
+    if (x > rect.width * 0.58) {
+      shootNow();
+    } else {
+      setTouchingNow(true);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setTouchingNow(false);
+  };
+
+  const handleTouchStart = (e) => {
+    e.preventDefault();
+    if (statusRef.current !== "playing") return;
+
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    for (const touch of Array.from(e.changedTouches)) {
+      const x = touch.clientX - rect.left;
+
+      if (x > rect.width * 0.58) {
+        shootNow();
+      } else {
+        flyTouchIdsRef.current.add(touch.identifier);
+      }
+    }
+
+    setTouchingNow(flyTouchIdsRef.current.size > 0);
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const nextFlyTouchIds = new Set();
+
+    for (const touch of Array.from(e.touches)) {
+      const x = touch.clientX - rect.left;
+      if (x <= rect.width * 0.58) {
+        nextFlyTouchIds.add(touch.identifier);
+      }
+    }
+
+    flyTouchIdsRef.current = nextFlyTouchIds;
+    setTouchingNow(nextFlyTouchIds.size > 0);
+  };
+
+  const handleTouchEnd = (e) => {
+    for (const touch of Array.from(e.changedTouches)) {
+      flyTouchIdsRef.current.delete(touch.identifier);
+    }
+
+    setTouchingNow(flyTouchIdsRef.current.size > 0);
+  };
 
   useEffect(() => {
     let frame = 0;
@@ -186,6 +270,7 @@ export default function OilSkyPrototype() {
     }
 
     function resetGame(startPlaying = true) {
+      clearFlyTouches();
       game.spawnTimer = 0;
       game.missileTimer = 1.2;
       game.fireTimer = 0;
@@ -361,6 +446,7 @@ export default function OilSkyPrototype() {
 
     function playerHit() {
       if (!game.player?.alive) return;
+      clearFlyTouches();
       game.player.alive = false;
       emitExplosion(game.player.x + 16, game.player.y, 1.8);
       setStatus("gameover");
@@ -1039,6 +1125,7 @@ export default function OilSkyPrototype() {
   }, [score, status]);
 
   const startRun = () => {
+    clearFlyTouches();
     const game = gameRef.current;
     if (!game) return;
     game.lastTs = 0;
@@ -1090,35 +1177,13 @@ export default function OilSkyPrototype() {
                   ref={wrapRef}
                   className="relative w-full touch-none bg-slate-950"
                   style={{ width: viewportSize.width, height: viewportSize.height }}
-                  onMouseDown={(e) => {
-                    const rect = wrapRef.current?.getBoundingClientRect();
-                    const x = rect ? e.clientX - rect.left : 0;
-                    if (rect && x > rect.width * 0.58) {
-                      const game = gameRef.current;
-                      if (game?.player && statusRef.current === "playing") {
-                        game.tryShoot?.();
-                      }
-                    } else {
-                      setIsTouching(true);
-                    }
-                  }}
-                  onMouseUp={() => setIsTouching(false)}
-                  onMouseLeave={() => setIsTouching(false)}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    const rect = wrapRef.current?.getBoundingClientRect();
-                    const touch = e.touches?.[0];
-                    const x = rect && touch ? touch.clientX - rect.left : 0;
-                    if (rect && x > rect.width * 0.58) {
-                      const game = gameRef.current;
-                      if (game?.player && statusRef.current === "playing") {
-                        game.tryShoot?.();
-                      }
-                    } else {
-                      setIsTouching(true);
-                    }
-                  }}
-                  onTouchEnd={() => setIsTouching(false)}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchEnd}
                 >
                   <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
@@ -1197,6 +1262,7 @@ export default function OilSkyPrototype() {
                 <h2 className="mb-3 text-lg font-bold text-slate-100">Controls</h2>
                 <p>Linke Seite halten = steigen</p>
                 <p>Rechte Seite tippen oder klicken = schießen</p>
+                <p>Multitouch aktiv: links halten + rechts schießen gleichzeitig</p>
                 <p>Schuss-Cooldown = 0.5 Sekunden</p>
                 <p>Space / Pfeil hoch = steigen</p>
                 <p>Enter = schießen</p>
@@ -1212,35 +1278,13 @@ export default function OilSkyPrototype() {
                 <div
                   ref={wrapRef}
                   className="relative h-[72vh] min-h-[720px] w-full touch-none bg-slate-950"
-                  onMouseDown={(e) => {
-                    const rect = wrapRef.current?.getBoundingClientRect();
-                    const x = rect ? e.clientX - rect.left : 0;
-                    if (rect && x > rect.width * 0.58) {
-                      const game = gameRef.current;
-                      if (game?.player && statusRef.current === "playing") {
-                        game.tryShoot?.();
-                      }
-                    } else {
-                      setIsTouching(true);
-                    }
-                  }}
-                  onMouseUp={() => setIsTouching(false)}
-                  onMouseLeave={() => setIsTouching(false)}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    const rect = wrapRef.current?.getBoundingClientRect();
-                    const touch = e.touches?.[0];
-                    const x = rect && touch ? touch.clientX - rect.left : 0;
-                    if (rect && x > rect.width * 0.58) {
-                      const game = gameRef.current;
-                      if (game?.player && statusRef.current === "playing") {
-                        game.tryShoot?.();
-                      }
-                    } else {
-                      setIsTouching(true);
-                    }
-                  }}
-                  onTouchEnd={() => setIsTouching(false)}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchEnd}
                 >
                   <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
